@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blue Door — Painel Comercial</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --accent: #4f6ef7;
+      --accent2: #7c3aed;
+      --green: #22c55e;
+      --yellow: #eab308;
+      --red: #ef4444;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --border: #2d3148;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+    }
+    header {
+      background: linear-gradient(135deg, #1a1d27 0%, #22263a 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 24px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+    .logo-area img {
+      height: 48px;
+      width: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4));
+    }
+    .logo-text h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, #a855f7, #22c55e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .logo-text p {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-top: 4px;
+    }
+    .header-meta { text-align: right; }
+    .badge-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(34,197,94,0.15);
+      border: 1px solid rgba(34,197,94,0.4);
+      color: var(--green);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .badge-live::before {
+      content: '';
+      width: 7px; height: 7px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    .update-time {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+    .section-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 16px;
+      margin-top: 8px;
+    }
+
+    /* ===== CABEÇALHO COMERCIAL ===== */
+    .commercial-header {
+      background: linear-gradient(135deg, rgba(168,85,247,0.15) 0%, rgba(34,197,94,0.10) 100%);
+      border: 1px solid rgba(168,85,247,0.3);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 28px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .commercial-header-icon { font-size: 1.8rem; }
+    .commercial-header-text h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .commercial-header-text p {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* ===== KPI CARDS ===== */
+    .commercial-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .commercial-kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      text-align: center;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .commercial-kpi-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent2);
+    }
+    .commercial-kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .commercial-kpi-card.cat-visita::before       { background: linear-gradient(90deg, #a855f7, #c084fc); }
+    .commercial-kpi-card.cat-quente::before       { background: linear-gradient(90deg, #ef4444, #f87171); }
+    .commercial-kpi-card.cat-morno::before        { background: linear-gradient(90deg, #f97316, #fb923c); }
+    .commercial-kpi-card.cat-redirecionado::before { background: linear-gradient(90deg, #eab308, #facc15); }
+    .commercial-kpi-card.cat-frio::before         { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+    .commercial-kpi-card.cat-perdido::before      { background: linear-gradient(90deg, #64748b, #94a3b8); }
+    .commercial-kpi-card.cat-vendido::before      { background: linear-gradient(90deg, #22c55e, #4ade80); }
+    .commercial-kpi-card.cat-total::before        { background: linear-gradient(90deg, #7c3aed, #4f6ef7); }
+    .commercial-kpi-value {
+      font-size: 2.2rem;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .cat-visita .commercial-kpi-value       { color: #a855f7; }
+    .cat-quente .commercial-kpi-value       { color: #ef4444; }
+    .cat-morno .commercial-kpi-value        { color: #f97316; }
+    .cat-redirecionado .commercial-kpi-value { color: #eab308; }
+    .cat-frio .commercial-kpi-value         { color: #3b82f6; }
+    .cat-perdido .commercial-kpi-value      { color: #64748b; }
+    .cat-vendido .commercial-kpi-value      { color: #22c55e; }
+    .cat-total .commercial-kpi-value        { color: #7c3aed; }
+    .commercial-kpi-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    /* ===== MÉTRICAS ===== */
+    .commercial-metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .commercial-metric-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .commercial-metric-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+    }
+    .commercial-metric-icon { font-size: 1.3rem; margin-bottom: 2px; }
+    .commercial-metric-value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+    }
+    .commercial-metric-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted);
+    }
+    .commercial-metric-sub {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* ===== FUNIL ===== */
+    .commercial-funnel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 32px;
+    }
+    .commercial-funnel-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 20px;
+    }
+    .commercial-funnel-steps {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .commercial-funnel-step {
+      flex: 1;
+      min-width: 90px;
+      background: var(--surface2);
+      border-radius: 10px;
+      padding: 14px 12px;
+      text-align: center;
+      border: 1px solid var(--border);
+    }
+    .commercial-funnel-step-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .commercial-funnel-step-label {
+      font-size: 0.68rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 4px;
+    }
+    .commercial-funnel-step-rate {
+      font-size: 0.75rem;
+      color: var(--green);
+      font-weight: 600;
+      margin-top: 4px;
+    }
+    .commercial-funnel-arrow {
+      color: var(--muted);
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+
+    /* ===== GRÁFICOS ===== */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+    @media (max-width: 768px) { .charts-grid { grid-template-columns: 1fr; } }
+    .chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .chart-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+    .chart-wrap { position: relative; }
+
+    /* ===== TABELA ===== */
+    .leads-table-wrap {
+      margin-bottom: 32px;
+      overflow-x: auto;
+    }
+    .leads-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--surface);
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .leads-table th {
+      background: var(--surface2);
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 12px 16px;
+      text-align: left;
+    }
+    .leads-table td {
+      padding: 14px 16px;
+      border-top: 1px solid var(--border);
+      font-size: 0.88rem;
+      color: var(--text);
+    }
+    .leads-table tr:hover td { background: var(--surface2); }
+    .cat-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+    .cat-badge.Visita        { background: rgba(168,85,247,0.15);   color: #a855f7; }
+    .cat-badge.Quente        { background: rgba(239,68,68,0.15);    color: #ef4444; }
+    .cat-badge.Morno         { background: rgba(249,115,22,0.15);   color: #f97316; }
+    .cat-badge.Redirecionado { background: rgba(234,179,8,0.15);    color: #eab308; }
+    .cat-badge.Frio          { background: rgba(59,130,246,0.15);   color: #3b82f6; }
+    .cat-badge.Perdido       { background: rgba(100,116,139,0.15);  color: #64748b; }
+    .cat-badge.Vendido       { background: rgba(34,197,94,0.15);    color: #22c55e; }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 20px 32px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.75rem;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-area">
+    <img src="logo.png" alt="Blue Door" />
+    <div class="logo-text">
+      <h1>Blue Door — Painel Comercial</h1>
+      <p>Acompanhamento de Leads via WhatsApp Business</p>
+    </div>
+  </div>
+  <div class="header-meta">
+    <div class="badge-live">AO VIVO</div>
+    <div class="update-time" id="update-time">Carregando...</div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Cabeçalho da seção -->
+  <div class="commercial-header">
+    <div class="commercial-header-icon">💬</div>
+    <div class="commercial-header-text">
+      <h2>Painel Comercial — WhatsApp Business</h2>
+      <p>Leads gerados pela campanha Oceana Golf e atendidos via WhatsApp</p>
+    </div>
+  </div>
+
+  <!-- Status por Categoria -->
+  <p class="section-title">Status dos Leads por Categoria</p>
+  <div class="commercial-kpi-grid" id="commercial-kpi-grid"></div>
+
+  <!-- Métricas -->
+  <p class="section-title">Métricas Comerciais</p>
+  <div class="commercial-metrics-grid" id="commercial-metrics-grid"></div>
+
+  <!-- Funil -->
+  <p class="section-title">Funil Comercial</p>
+  <div class="commercial-funnel">
+    <div class="commercial-funnel-title">Do lead ao fechamento</div>
+    <div class="commercial-funnel-steps" id="commercial-funnel-steps"></div>
+  </div>
+
+  <!-- Gráficos -->
+  <p class="section-title">Distribuição dos Leads</p>
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">Leads por Categoria</div>
+      <div class="chart-wrap" style="height:280px">
+        <canvas id="chartLeadsDist"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Origem dos Leads</div>
+      <div class="chart-wrap" style="height:280px">
+        <canvas id="chartLeadsOrigin"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabela -->
+  <p class="section-title">Detalhamento dos Leads</p>
+  <div class="leads-table-wrap">
+    <table class="leads-table">
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Categoria</th>
+          <th>Interesse</th>
+          <th>Campanha</th>
+          <th>Última Interação</th>
+          <th>Resumo</th>
+        </tr>
+      </thead>
+      <tbody id="leads-table-body"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<footer>
+  Painel gerado por <a href="https://manus.im" target="_blank">Manus</a> ·
+  Dados via WhatsApp Business ·
+  Repositório: <a href="https://github.com/renan8989/bluedoor-comercial" target="_blank">renan8989/bluedoor-comercial</a>
+</footer>
+
+<script>
+  function formatDate(d) {
+    const [y, m, day] = d.split('-');
+    return `${day}/${m}/${y}`;
+  }
+
+  fetch('data/leads_data.json?v=' + Date.now())
+    .then(r => r.json())
+    .then(leads => {
+      document.getElementById('update-time').textContent =
+        'Atualizado em: ' + new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+      renderCommercial(leads);
+    })
+    .catch(err => {
+      document.getElementById('update-time').textContent = 'Erro ao carregar dados';
+      console.error(err);
+    });
+
+  function renderCommercial(leads) {
+    const catMap = {
+      'Visita':        { cls: 'cat-visita',        label: 'Visita Marcada',  color: '#a855f7', icon: '📅' },
+      'Quente':        { cls: 'cat-quente',        label: 'Quentes',         color: '#ef4444', icon: '🔥' },
+      'Morno':         { cls: 'cat-morno',         label: 'Mornos',          color: '#f97316', icon: '🌡️' },
+      'Redirecionado': { cls: 'cat-redirecionado', label: 'Redirecionados',  color: '#eab308', icon: '🔀' },
+      'Frio':          { cls: 'cat-frio',          label: 'Frios',           color: '#3b82f6', icon: '❄️' },
+      'Perdido':       { cls: 'cat-perdido',       label: 'Perdidos',        color: '#64748b', icon: '❌' },
+      'Vendido':       { cls: 'cat-vendido',       label: 'Vendidos',        color: '#22c55e', icon: '🏆' }
+    };
+    const catOrder = ['Visita', 'Quente', 'Morno', 'Redirecionado', 'Frio', 'Perdido', 'Vendido'];
+
+    const counts = {};
+    catOrder.forEach(c => counts[c] = 0);
+    leads.forEach(l => { if (counts[l.categoria] !== undefined) counts[l.categoria]++; });
+    const total = leads.length;
+
+    // KPI Cards
+    document.getElementById('commercial-kpi-grid').innerHTML =
+      catOrder.map(cat => `
+        <div class="commercial-kpi-card ${catMap[cat].cls}">
+          <div style="font-size:1.4rem;margin-bottom:4px">${catMap[cat].icon}</div>
+          <div class="commercial-kpi-value">${counts[cat]}</div>
+          <div class="commercial-kpi-label">${catMap[cat].label}</div>
+        </div>
+      `).join('') + `
+        <div class="commercial-kpi-card cat-total">
+          <div style="font-size:1.4rem;margin-bottom:4px">👥</div>
+          <div class="commercial-kpi-value">${total}</div>
+          <div class="commercial-kpi-label">Total de Leads</div>
+        </div>
+      `;
+
+    // Métricas
+    const responderam   = leads.filter(l => l.categoria !== 'Frio').length;
+    const qualificados  = leads.filter(l => ['Quente','Visita','Morno'].includes(l.categoria)).length;
+    const visitas       = counts['Visita'];
+    const vendidos      = counts['Vendido'];
+    const redirecionados = counts['Redirecionado'];
+    const perdidos      = counts['Perdido'];
+    const pct = n => total > 0 ? (n / total * 100).toFixed(0) + '%' : '0%';
+
+    document.getElementById('commercial-metrics-grid').innerHTML = [
+      { icon: '💬', value: responderam,    label: 'Responderam',      sub: pct(responderam) + ' do total' },
+      { icon: '⭐', value: qualificados,   label: 'Qualificados',     sub: pct(qualificados) + ' (Morno+Quente+Visita)' },
+      { icon: '🏠', value: visitas,        label: 'Visitas Marcadas', sub: pct(visitas) + ' do total' },
+      { icon: '🔀', value: redirecionados, label: 'Redirecionados',   sub: pct(redirecionados) + ' do total' },
+      { icon: '❌', value: perdidos,       label: 'Perdidos',         sub: pct(perdidos) + ' do total' },
+      { icon: '🏆', value: vendidos,       label: 'Vendidos',         sub: pct(vendidos) + ' de conversão' }
+    ].map(m => `
+      <div class="commercial-metric-card">
+        <div class="commercial-metric-icon">${m.icon}</div>
+        <div class="commercial-metric-value">${m.value}</div>
+        <div class="commercial-metric-label">${m.label}</div>
+        <div class="commercial-metric-sub">${m.sub}</div>
+      </div>
+    `).join('');
+
+    // Funil
+    const funnelSteps = [
+      { label: 'Total Leads', value: total,         rate: null },
+      { label: 'Responderam', value: responderam,   rate: pct(responderam) },
+      { label: 'Qualificados', value: qualificados, rate: pct(qualificados) },
+      { label: 'Visita',       value: visitas,      rate: pct(visitas) },
+      { label: 'Vendidos',     value: vendidos,     rate: pct(vendidos) }
+    ];
+    document.getElementById('commercial-funnel-steps').innerHTML = funnelSteps.map((s, i) => `
+      <div class="commercial-funnel-step">
+        <div class="commercial-funnel-step-value">${s.value}</div>
+        <div class="commercial-funnel-step-label">${s.label}</div>
+        ${s.rate ? `<div class="commercial-funnel-step-rate">${s.rate}</div>` : ''}
+      </div>
+      ${i < funnelSteps.length - 1 ? '<div class="commercial-funnel-arrow">›</div>' : ''}
+    `).join('');
+
+    // Gráfico donut
+    const activeCats = catOrder.filter(c => counts[c] > 0);
+    new Chart(document.getElementById('chartLeadsDist'), {
+      type: 'doughnut',
+      data: {
+        labels: activeCats.map(c => catMap[c].label),
+        datasets: [{
+          data: activeCats.map(c => counts[c]),
+          backgroundColor: activeCats.map(c => catMap[c].color + 'cc'),
+          borderColor: activeCats.map(c => catMap[c].color),
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'right', labels: { color: '#94a3b8', font: { size: 12 }, padding: 14 } },
+          tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} lead${ctx.parsed !== 1 ? 's' : ''} (${(ctx.parsed/total*100).toFixed(0)}%)` } }
+        }
+      }
+    });
+
+    // Gráfico de origem
+    const origemMap = {};
+    leads.forEach(l => { origemMap[l.campanha] = (origemMap[l.campanha] || 0) + 1; });
+    const origemLabels = Object.keys(origemMap);
+    const origemColors = ['#4f6ef7', '#7c3aed', '#22c55e', '#eab308', '#ef4444'];
+    new Chart(document.getElementById('chartLeadsOrigin'), {
+      type: 'bar',
+      data: {
+        labels: origemLabels,
+        datasets: [{ label: 'Leads', data: origemLabels.map(k => origemMap[k]), backgroundColor: origemColors.slice(0, origemLabels.length), borderRadius: 8 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: '#94a3b8' }, grid: { color: '#2d3148' } },
+          y: { ticks: { color: '#94a3b8', stepSize: 1 }, grid: { color: '#2d3148' } }
+        }
+      }
+    });
+
+    // Tabela
+    const sortOrder = { 'Vendido': 0, 'Visita': 1, 'Quente': 2, 'Morno': 3, 'Redirecionado': 4, 'Frio': 5, 'Perdido': 6 };
+    const sorted = [...leads].sort((a, b) => (sortOrder[a.categoria] ?? 9) - (sortOrder[b.categoria] ?? 9));
+    document.getElementById('leads-table-body').innerHTML = sorted.map(l => `
+      <tr>
+        <td><strong>${l.nome}</strong></td>
+        <td><span class="cat-badge ${l.categoria}">${catMap[l.categoria] ? catMap[l.categoria].icon + ' ' + l.categoria : l.categoria}</span></td>
+        <td style="color:var(--muted)">${l.interesse}</td>
+        <td style="color:var(--muted);font-size:0.8rem">${l.campanha}</td>
+        <td style="color:var(--muted);font-size:0.8rem">${formatDate(l.ultima_interacao)}</td>
+        <td style="color:var(--muted);font-size:0.8rem;max-width:300px">${l.resumo}</td>
+      </tr>
+    `).join('');
+  }
+</script>
+</body>
+</html>
