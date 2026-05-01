@@ -422,6 +422,14 @@
     </div>
   </div>
 
+  <!-- Leads por Semana -->
+  <p class="section-title">Leads por Semana</p>
+  <div class="chart-card" style="margin-bottom:2rem">
+    <div class="chart-wrap" style="height:280px">
+      <canvas id="chartLeadsWeekly"></canvas>
+    </div>
+  </div>
+
   <!-- Tabela -->
   <p class="section-title">Detalhamento dos Leads</p>
   <div class="leads-table-wrap">
@@ -432,6 +440,7 @@
           <th>Categoria</th>
           <th>Interesse</th>
           <th>Campanha</th>
+          <th>Data de Entrada</th>
           <th>Última Interação</th>
           <th>Resumo</th>
         </tr>
@@ -584,6 +593,39 @@
       }
     });
 
+    // Gráfico Leads por Semana
+    const weekMap = {};
+    leads.forEach(l => {
+      if (!l.data_entrada) return;
+      const d = new Date(l.data_entrada + 'T12:00:00');
+      // Calcular início da semana (segunda-feira)
+      const day = d.getDay(); // 0=dom, 1=seg...
+      const diff = (day === 0 ? -6 : 1 - day);
+      const monday = new Date(d);
+      monday.setDate(d.getDate() + diff);
+      const key = monday.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + '/' + monday.getFullYear();
+      weekMap[key] = (weekMap[key] || 0) + 1;
+    });
+    const weekLabels = Object.keys(weekMap).sort((a, b) => {
+      const [da, ma, ya] = a.split('/'); const [db, mb, yb] = b.split('/');
+      return new Date(ya, ma-1, da) - new Date(yb, mb-1, db);
+    });
+    new Chart(document.getElementById('chartLeadsWeekly'), {
+      type: 'bar',
+      data: {
+        labels: weekLabels.map(w => 'Semana de ' + w),
+        datasets: [{ label: 'Leads', data: weekLabels.map(k => weekMap[k]), backgroundColor: '#4f6ef7', borderRadius: 8 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: '#94a3b8' }, grid: { color: '#2d3148' } },
+          y: { ticks: { color: '#94a3b8', stepSize: 1 }, grid: { color: '#2d3148' }, beginAtZero: true }
+        }
+      }
+    });
+
     // Tabela
     const sortOrder = { 'Vendido': 0, 'Visita': 1, 'Quente': 2, 'Morno': 3, 'Redirecionado': 4, 'Frio': 5, 'Perdido': 6 };
     const sorted = [...leads].sort((a, b) => (sortOrder[a.categoria] ?? 9) - (sortOrder[b.categoria] ?? 9));
@@ -593,6 +635,7 @@
         <td><span class="cat-badge ${l.categoria}">${catMap[l.categoria] ? catMap[l.categoria].icon + ' ' + l.categoria : l.categoria}</span></td>
         <td style="color:var(--muted)">${l.interesse}</td>
         <td style="color:var(--muted);font-size:0.8rem">${l.campanha}</td>
+        <td style="color:var(--muted);font-size:0.8rem">${l.data_entrada ? formatDate(l.data_entrada) : '-'}</td>
         <td style="color:var(--muted);font-size:0.8rem">${formatDate(l.ultima_interacao)}</td>
         <td style="color:var(--muted);font-size:0.8rem;max-width:300px">${l.resumo}</td>
       </tr>
