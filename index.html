@@ -394,6 +394,10 @@
   <p class="section-title">Status dos Leads por Categoria</p>
   <div class="commercial-kpi-grid" id="commercial-kpi-grid"></div>
 
+  <!-- Métricas -->
+  <p class="section-title">Métricas Comerciais</p>
+  <div class="commercial-metrics-grid" id="commercial-metrics-grid"></div>
+
   <!-- Funil -->
   <p class="section-title">Funil Comercial</p>
   <div class="commercial-funnel">
@@ -495,7 +499,7 @@
         </div>
       `;
 
-    // Variáveis auxiliares para o funil
+    // Métricas
     const responderam   = leads.filter(l => l.categoria !== 'Frio').length;
     const qualificados  = leads.filter(l => ['Quente','Visita','Morno'].includes(l.categoria)).length;
     const visitas       = counts['Visita'];
@@ -503,6 +507,22 @@
     const redirecionados = counts['Redirecionado'];
     const perdidos      = counts['Perdido'];
     const pct = n => total > 0 ? (n / total * 100).toFixed(0) + '%' : '0%';
+
+    document.getElementById('commercial-metrics-grid').innerHTML = [
+      { icon: '💬', value: responderam,    label: 'Responderam',      sub: pct(responderam) + ' do total' },
+      { icon: '⭐', value: qualificados,   label: 'Qualificados',     sub: pct(qualificados) + ' (Morno+Quente+Visita)' },
+      { icon: '🏠', value: visitas,        label: 'Visitas Marcadas', sub: pct(visitas) + ' do total' },
+      { icon: '🔀', value: redirecionados, label: 'Redirecionados',   sub: pct(redirecionados) + ' do total' },
+      { icon: '❌', value: perdidos,       label: 'Perdidos',         sub: pct(perdidos) + ' do total' },
+      { icon: '🏆', value: vendidos,       label: 'Vendidos',         sub: pct(vendidos) + ' de conversão' }
+    ].map(m => `
+      <div class="commercial-metric-card">
+        <div class="commercial-metric-icon">${m.icon}</div>
+        <div class="commercial-metric-value">${m.value}</div>
+        <div class="commercial-metric-label">${m.label}</div>
+        <div class="commercial-metric-sub">${m.sub}</div>
+      </div>
+    `).join('');
 
     // Funil
     const funnelSteps = [
